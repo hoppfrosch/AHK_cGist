@@ -4,7 +4,7 @@
 #NoEnv
 
 srcBaseDir := A_ScriptDir "\.."
-dstBaseDir := A_ScriptDir "\..\_doc"
+dstBaseDir := A_ScriptDir "\..\..\gh_pages"
 
 makeCopy(srcBaseDir "\cGist.ahk", dstBaseDir)
 ;makeCopy(srcBaseDir "\_inc\cJeeBooConfig.ahk", dstBaseDir "\_inc") 
@@ -13,5 +13,7 @@ makeCopy(srcBaseDir "\cGist.ahk", dstBaseDir)
 MakeDoc(dstBaseDir)
 ;MakeDoc(dstBaseDir "\inc")
 
-;FileDelete, %dstBaseDir%\JeeBoo_ConfigEditor.ahk
+FileDelete, %dstBaseDir%\cGist.ahk
 ;FileDelete, %dstBaseDir%\_inc\cJeeBooConfig.ahk
+
+FileMove, %dstBaseDir%\cGist.html, %dstBaseDir%\index.html
