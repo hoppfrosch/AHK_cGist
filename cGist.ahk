@@ -5,26 +5,28 @@
 		Class to handle gists (https://gist.github.com/)
 
 	Author: 
-        hoppfrosch
-    
+	hoppfrosch
+
 	Credits: 
 		- Perl Module WWW::GitHub::Gist(https://metacpan.org/module/WWW::GitHub::Gist)
-		- ComObject HTTPRequest(http://www.autohotkey.com/community/viewtopic.php?p=377651#p377651 & http://msdn.microsoft.com/en-us/library/aa384106.aspx)
-	    - Base64 Encoding by Laszlo (http://www.autohotkey.com/community/viewtopic.php?p=68613#p68613)
+		- ComObject HTTPRequest(http://www.autohotkey.com/board/topic/56987-com-object-reference-autohotkey-l/#entry358508 & http://msdn.microsoft.com/en-us/library/aa384106.aspx)
+		- Base64 Encoding by Laszlo (http://www.autohotkey.com/board/topic/5545-base64-coderdecoder/page-2#entry64250)
+		- Gist() by Geekdude (https://gist.github.com/4421950)
 		
 	Requires:
-		- lib_json by LordKrandel (http://www.autohotkey.com/community/viewtopic.php?f=13&t=66070)
+		- lib_json by LordKrandel (http://www.autohotkey.com/board/topic/61328-lib-json-ahk-l-json-object/)
 		
 	License: 
-        WTFPL (http://sam.zoy.org/wtfpl/)
+	WTFPL (http://sam.zoy.org/wtfpl/)
 		
 	Changelog:
-	    0.1.1 (20121015) - hoppfrosch ([+] Memberfunction getJSON())
+		0.1.2 (20130102) - hoppfrosch ([+] Functions AKK2StandardControlCharacter(), Standard2AHKControlCharacter()
+		0.1.1 (20121015) - hoppfrosch ([+] Memberfunction getJSON())
 		0.1.0 (20121015) - hoppfrosch ([+] Initial)
 */
 class Gist {
 	static _api_url := "https://api.github.com"
-	static _version := "0.1.1"
+	static _version := "0.1.2"
 	_debug := 1  ; _DBG_
 	static user := ""
 	static password := ""
@@ -144,15 +146,15 @@ Returns:
     authorization token (string)
     
 Author(s):
-    20110928 (Original) - hoppfrosch
+    20120928 (Original) - hoppfrosch
+	20130102
 ===============================================================================
 */  
     __basic_auth_header() {
 		
 		if (!(this.user) && !(this.password)) {
-			if (this._debug) ; _DBG_
-				OutputDebug % "![" A_ThisFunc "(user=" this.user ", password=" this.password ")] - ERROR: required parameter is missing" ; _DBG_
-			return
+			token :=  ; Don't auth (anonymous)
+			return token
 		}
 		
 		if (this._debug) ; _DBG_
@@ -179,7 +181,7 @@ Returns:
     json object, (empty object in case of error)
     
 Author(s):
-    20110928 (Original) - hoppfrosch
+    20120928 (Original) - hoppfrosch
 ===============================================================================
 */ 
 	__get_json_obj(url) {
@@ -205,7 +207,7 @@ Returns:
     String ("{"message":"Not Found"}" in case of Error)
     
 Author(s):
-    20110928 (Original) - hoppfrosch
+    20120928 (Original) - hoppfrosch
 ===============================================================================
 */ 
 	__get_json(url) {
@@ -264,7 +266,7 @@ Start of Base64 Encoding/Decoding
 
 Base64 Encoding/Decoding  (see: http://en.wikipedia.org/wiki/Base64)
 
-Original - Laszlo - http://www.autohotkey.com/community/viewtopic.php?p=68613#p68613
+Original - Laszlo - http://www.autohotkey.com/board/topic/5545-base64-coderdecoder/page-2#entry64250
 */
 Base64Encode(string) {
 	out := ""
@@ -323,3 +325,56 @@ DeCode(c) { ; c = a char in Chars ==> position [0,63]
 End of Base64 Encoding/Decoding
 **********************************************************************************
 */
+
+/*
+===============================================================================
+Function: AHK2StandardControlCharacter
+	Replace AHK-style control characters to Standard
+
+Parameters:
+    J - String to convert to Standard style
+    
+Returns:
+    String in Standard Style
+    
+Author(s):
+    20130201 (Original) - hoppfrosch
+	Original - geekdude - http://www.autohotkey.com/board/topic/88675-gist-ahk-l/
+===============================================================================
+*/
+AHK2StandardControlCharacter(J) {
+	StringReplace, J, J, \, \\, All
+	StringReplace, J, J, `b, \b, All
+	StringReplace, J, J, `f, \f, All
+	StringReplace, J, J, `n, \n, All
+	StringReplace, J, J, `r, \r, All
+	StringReplace, J, J, `t, \t, All
+	StringReplace, J, J, `", \`", All
+	return J
+}
+
+/*
+===============================================================================
+Function: Standard2AHKControlCharacter
+	Replace Standard control characters to AHK-style 
+
+Parameters:
+    J - String to convert to AHK-Style
+    
+Returns:
+    String in AHK style
+    
+Author(s):
+    20130201 (Original) - hoppfrosch
+===============================================================================
+*/
+Standard2AHKControlCharacter(J) {
+	StringReplace, J, J, \\, \, All
+	StringReplace, J, J, \b, `b, All
+	StringReplace, J, J, \f, `f, All
+	StringReplace, J, J, \n, `n, All
+	StringReplace, J, J, \r, `r, All
+	StringReplace, J, J, \t, `t, All
+	StringReplace, J, J, \`", `", All
+	return J
+}
