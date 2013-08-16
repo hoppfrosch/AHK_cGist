@@ -8,22 +8,20 @@
 	hoppfrosch
 
 	Credits: 
-		- Perl Module WWW::GitHub::Gist(https://metacpan.org/module/WWW::GitHub::Gist)
-		- ComObject HTTPRequest(http://www.autohotkey.com/board/topic/56987-com-object-reference-autohotkey-l/#entry358508 & http://msdn.microsoft.com/en-us/library/aa384106.aspx)
+		- Perl Module WWW::GitHub::Gist (https://metacpan.org/module/WWW::GitHub::Gist)
+		- ComObject HTTPRequest (http://www.autohotkey.com/board/topic/56987-com-object-reference-autohotkey-l/#entry358508 & http://msdn.microsoft.com/en-us/library/aa384106.aspx)
 		- Base64 Encoding by Laszlo (http://www.autohotkey.com/board/topic/5545-base64-coderdecoder/page-2#entry64250)
 		- Gist() by Geekdude (https://gist.github.com/4421950)
-		
-	Requires:
-		- lib_json by LordKrandel (http://www.autohotkey.com/board/topic/61328-lib-json-ahk-l-json-object/)
 		
 	License: 
 	WTFPL (http://sam.zoy.org/wtfpl/)
 		
 	Changelog:
-		0.2.0 (20130102) - hoppfrosch (Create new gist & delete existing gist
-		0.1.2 (20130102) - hoppfrosch ([+] Functions AKK2StandardControlCharacter(), Standard2AHKControlCharacter())
-		0.1.1 (20121015) - hoppfrosch ([+] Memberfunction getJSON())
-		0.1.0 (20121015) - hoppfrosch ([+] Initial)
+	    0.3.0 (20130816) - hoppfrosch (Internal reorganization concerning documentation) - #1,#2
+		0.2.0 (20130102) - hoppfrosch (Create new gist & delete existing gist)
+		0.1.2 (20130102) - hoppfrosch (Functions AKK2StandardControlCharacter(), Standard2AHKControlCharacter())
+		0.1.1 (20121015) - hoppfrosch (Memberfunction getJSON())
+		0.1.0 (20121015) - hoppfrosch (Initial)
 */
 class Gist {
 	static _api_url := "https://api.github.com"
@@ -304,10 +302,10 @@ Author(s):
 /*
 ===============================================================================
 Function: __HTTPdelete
-    HTTPdelete on Github-URL
+    HTTPdelete on Github-URL (**INTERNAL**)
 
 Parameters:
-    url - URL to deletet - it's a relative URL to "https://api.github.com" (required)
+    url - URL to delete - it's a relative URL to "https://api.github.com" (required)
     
 Returns:
     String ("{"message":"Not Found"}" in case of Error)
@@ -334,7 +332,7 @@ Author(s):
 /*
 ===============================================================================
 Function: __HTTPget_obj
-    HTTPget on Github-URL, returning result as Object
+    HTTPget on Github-URL, returning result as Object (**INTERNAL**)
 
 Parameters:
     url - URL to get - it's a relative URL to "https://api.github.com" (required)
@@ -360,7 +358,7 @@ Author(s):
 /*
 ===============================================================================
 Function: __HTTPget
-    HTTPget on Github-URL, returning result as JSON-String
+    HTTPget on Github-URL, returning result as JSON-String (**INTERNAL**)
 
 Parameters:
     url - URL to get - it's a relative URL to "https://api.github.com" (required)
@@ -390,7 +388,7 @@ Author(s):
 /*
 ===============================================================================
 Function: __HTTPpost
-    HTTPpost JSON-string to on Github-URL, returning result as JSON-String
+    HTTPpost JSON-string to on Github-URL, returning result as JSON-String (**INTERNAL**)
 
 Parameters:
 	Contents - Contents to post
