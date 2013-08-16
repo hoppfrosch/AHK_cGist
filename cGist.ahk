@@ -8,8 +8,8 @@
 	hoppfrosch
 
 	Credits: 
-		- Perl Module WWW::GitHub::Gist(https://metacpan.org/module/WWW::GitHub::Gist)
-		- ComObject HTTPRequest(http://www.autohotkey.com/board/topic/56987-com-object-reference-autohotkey-l/#entry358508 & http://msdn.microsoft.com/en-us/library/aa384106.aspx)
+		- Perl Module WWW::GitHub::Gist (https://metacpan.org/module/WWW::GitHub::Gist)
+		- ComObject HTTPRequest (http://www.autohotkey.com/board/topic/56987-com-object-reference-autohotkey-l/#entry358508 & http://msdn.microsoft.com/en-us/library/aa384106.aspx)
 		- Base64 Encoding by Laszlo (http://www.autohotkey.com/board/topic/5545-base64-coderdecoder/page-2#entry64250)
 		- Gist() by Geekdude (https://gist.github.com/4421950)
 		
@@ -17,6 +17,7 @@
 	WTFPL (http://sam.zoy.org/wtfpl/)
 		
 	Changelog:
+	    0.3.0 (20130816) - hoppfrosch (Internal reorganization concerning documentation) - #1,#2
 		0.2.0 (20130102) - hoppfrosch (Create new gist & delete existing gist)
 		0.1.2 (20130102) - hoppfrosch (Functions AKK2StandardControlCharacter(), Standard2AHKControlCharacter())
 		0.1.1 (20121015) - hoppfrosch (Memberfunction getJSON())
