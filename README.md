@@ -1,4 +1,8 @@
 AHK_cGist
 =========
 
-An AutoHotkey-class to handle Gists
+AHK class **Gist** for handling Gists from AHK
+
+*Current features:*
+
+- Retrieve a Gist given by ID from GitHub
