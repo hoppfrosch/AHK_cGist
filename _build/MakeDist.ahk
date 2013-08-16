@@ -7,10 +7,9 @@
 #include _inc\BuildTools.ahk
 #include ..\cGist.ahk
 
-gistID := 3742243
 user := "AHKUser"
 pw := "AHKUser2012"
-oGist := new Gist(gistID, user, pw)
+oGist := new Gist(user, pw)
 version := oGist.version()
 
 MsgBox % version

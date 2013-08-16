@@ -20,19 +20,54 @@
 	WTFPL (http://sam.zoy.org/wtfpl/)
 		
 	Changelog:
-		0.1.2 (20130102) - hoppfrosch ([+] Functions AKK2StandardControlCharacter(), Standard2AHKControlCharacter()
+		0.2.0 (20130102) - hoppfrosch (Create new gist & delete existing gist
+		0.1.2 (20130102) - hoppfrosch ([+] Functions AKK2StandardControlCharacter(), Standard2AHKControlCharacter())
 		0.1.1 (20121015) - hoppfrosch ([+] Memberfunction getJSON())
 		0.1.0 (20121015) - hoppfrosch ([+] Initial)
 */
 class Gist {
 	static _api_url := "https://api.github.com"
-	static _version := "0.1.2"
+	static _gist_url := "https://gist.github.com"
+	static _version := "0.2.0"
 	_debug := 1  ; _DBG_
 	static user := ""
 	static password := ""
 	static id := 0
 	static WebRequest := ""
 	gist := ""
+
+/*
+===============================================================================
+Function:   delete
+    Deletes an Gist with given ID - if ID is missing the internally stored ID is used
+
+Params:
+    id - id of gist to delete (optional - default: internally stored id)
+	
+Author(s):
+    20130102 (Original) - hoppfrosch
+===============================================================================
+*/
+	delete(id=0) {
+		if (id = 0) {
+			if (this.id) {
+				id := this.id
+			}
+			else {
+				return
+			}
+		}
+		this.id := id
+		
+		if (this._debug) ; _DBG_
+			OutputDebug % ">[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
+		
+		url := "/gists/" id
+		retVal := this.__HTTPdelete(url)
+		if (this._debug) ; _DBG_
+			OutputDebug % "<[" A_ThisFunc "([id:" this.id "]) -> " retVal "]" ; _DBG_
+		return retVal
+	}
 	
 /*
 ===============================================================================
@@ -80,12 +115,19 @@ Author(s):
     20120928 (Original) - hoppfrosch
 ===============================================================================
 */
-	get() {
+	get(id=0) {
+		if (id = 0) {
+			if (this.id) {
+				id := this.id
+			}
+		}
+		this.id := id
+		
 		if (this._debug) ; _DBG_
 			OutputDebug % ">[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
 		
-		url := "/gists/" this.id
-		retVal := this.__get_json_obj(url)
+		url := "/gists/" id
+		retVal := this.__HTTPget_obj(url)
 		this.gist := retVal
 		if (this._debug) ; _DBG_
 			OutputDebug % "<[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
@@ -104,18 +146,79 @@ Author(s):
     20121015 (Original) - hoppfrosch
 ===============================================================================
 */
-	getJSON() {
+	getJSON(id=0) {
+		if (id = 0) {
+			if (this.id) {
+				id := this.id
+			}
+		}
+		this.id := id
 		if (this._debug) ; _DBG_
 			OutputDebug % ">[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
 		
 		url := "/gists/" this.id
-		retVal := this.__get_json(url)
+		retVal := this.__HTTPget(url)
 		this.gist := retVal
 		if (this._debug) ; _DBG_
 			OutputDebug % "<[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
 		return retVal
 	}
 
+/*
+===============================================================================
+Function:   put
+    Creates a new gist
+
+Parameters:
+    Contents - Contents of the new gist (required)
+	Title - title (filename) of the new gist (optional - default: "Autohotkey")
+	Public - Flag to indicate wheter new gist should be public (optional - default: 1 (true))
+	
+Returns:
+    GIST-Object
+	
+Author(s):
+    20120928 (Original) - hoppfrosch
+===============================================================================
+*/
+	put(Contents, Title="AutoHotkey", Public="1")
+	{
+		if (this._debug) ; _DBG_
+			OutputDebug % ">[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
+		
+		Public := Public ? "true" : "false"
+		Contents := AHK2StandardControlCharacter(Contents)
+    
+		JSON = {"public":"%Public%","files":{"%Title%":{"content":"%Contents%"}}}
+    
+		data:= this.__HTTPpost(JSON, "/gists")
+    
+		If (RegExMatch(data, """html_url""\:""(.*?)""", Out)) {
+			this.id := this.__extractIDFromURL(Out1)
+			if (this._debug) ; _DBG_
+				OutputDebug % "<[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
+			return this.get()
+		}
+		
+		return
+	}
+
+	/*
+===============================================================================
+Function: url
+    Returns the URL of the gist 
+
+Returns:
+    String (URL)
+	
+Author(s):
+    20130102 (Original) - hoppfrosch
+===============================================================================
+*/
+	url() {
+		return this._gist_url "/" this.id
+	}
+	
 /*
 ===============================================================================
 Function:   version
@@ -146,8 +249,8 @@ Returns:
     authorization token (string)
     
 Author(s):
-    20120928 (Original) - hoppfrosch
-	20130102
+	20120928 (Original) - hoppfrosch
+	20130102 Support anonymous authorization
 ===============================================================================
 */  
     __basic_auth_header() {
@@ -163,15 +266,74 @@ Author(s):
 		str := this.user ":" this.password
 		token := "Basic " Base64Encode(str)
 		if (this._debug) ; _DBG_
-			OutputDebug % "<[" A_ThisFunc "() -> ret:" token ")]" ; _DBG_
-		
-		OutputDebug % ">[" A_ThisFunc "(user=" this.user ", password=" this.password ")  -> ret:" token "]" ; _DBG_
+			OutputDebug % ">[" A_ThisFunc "(user=" this.user ", password=" this.password ")  -> ret:" token "]" ; _DBG_
 		return token
+	}
+
+
+/*
+===============================================================================
+Function: __extractIDFromURL
+    Extracts ID from a given gist-url(**INTERNAL**)
+    
+Parameters:
+    url - gist-URL (required)
+	
+Returns:
+    gist-ID
+    
+Author(s):
+	20130102 (Original) - hoppfrosch
+===============================================================================
+*/  
+	__extractIDFromURL(url) {
+		if (this._debug) ; _DBG_
+			OutputDebug % ">[" A_ThisFunc "(url=" url ")]" ; _DBG_
+		
+		FoundPos := RegExMatch(url, this._gist_url "/(\d+)", match)
+		
+		if (FoundPos) {
+			if (this._debug) ; _DBG_
+				OutputDebug % ">[" A_ThisFunc "(url=" url ")  -> ret:" match1 "]" ; _DBG_
+			return match1
+		}
+		
+		return
 	}
 
 /*
 ===============================================================================
-Function: __get_json_obj
+Function: __HTTPdelete
+    HTTPdelete on Github-URL
+
+Parameters:
+    url - URL to deletet - it's a relative URL to "https://api.github.com" (required)
+    
+Returns:
+    String ("{"message":"Not Found"}" in case of Error)
+    
+Author(s):
+    20130102 (Original) - hoppfrosch
+===============================================================================
+*/ 
+	__HTTPdelete(url) {
+		if (this._debug) ; _DBG_
+			OutputDebug % ">[" A_ThisFunc "(url=" url ")]" ; _DBG_
+		req_url  := this._api_url url
+		Basic := this.__basic_auth_header() 
+		this.WebRequest.Open("DELETE", req_url)
+		if (Basic)
+			this.WebRequest.SetRequestHeader("authorization", Basic)
+		this.WebRequest.Send()
+		data := this.WebRequest.ResponseText
+		if (this._debug) ; _DBG_
+			OutputDebug % "<[" A_ThisFunc "(url=" req_url ")] -> ret: " data ; _DBG_
+		return data
+	}
+
+/*
+===============================================================================
+Function: __HTTPget_obj
     HTTPget on Github-URL, returning result as Object
 
 Parameters:
@@ -184,10 +346,10 @@ Author(s):
     20120928 (Original) - hoppfrosch
 ===============================================================================
 */ 
-	__get_json_obj(url) {
+	__HTTPget_obj(url) {
 		if (this._debug) ; _DBG_
 			OutputDebug % ">[" A_ThisFunc "(url=" url ")]" ; _DBG_
-		data := this.__get_json(url)
+		data := this.__HTTPget(url)
 		j := JSON_from(data)
 		
 		if (this._debug) ; _DBG_
@@ -197,7 +359,7 @@ Author(s):
 
 /*
 ===============================================================================
-Function: __get_json
+Function: __HTTPget
     HTTPget on Github-URL, returning result as JSON-String
 
 Parameters:
@@ -210,11 +372,14 @@ Author(s):
     20120928 (Original) - hoppfrosch
 ===============================================================================
 */ 
-	__get_json(url) {
+	__HTTPget(url) {
 		if (this._debug) ; _DBG_
 			OutputDebug % ">[" A_ThisFunc "(url=" url ")]" ; _DBG_
 		req_url  := this._api_url url
+		Basic := this.__basic_auth_header() 
 		this.WebRequest.Open("GET", req_url)
+		if (Basic)
+			this.WebRequest.SetRequestHeader("authorization", Basic)
 		this.WebRequest.Send()
 		data := this.WebRequest.ResponseText
 		if (this._debug) ; _DBG_
@@ -222,6 +387,40 @@ Author(s):
 		return data
 	}
 
+/*
+===============================================================================
+Function: __HTTPpost
+    HTTPpost JSON-string to on Github-URL, returning result as JSON-String
+
+Parameters:
+	Contents - Contents to post
+    url - URL to get - it's a relative URL to "https://api.github.com" (required)
+    
+Returns:
+    String ("{"message":"Not Found"}" in case of Error)
+    
+Author(s):
+    20130201 (Original) - hoppfrosch
+===============================================================================
+*/ 
+	__HTTPpost(Contents, url = "/gists") {
+		if (this._debug) ; _DBG_
+			OutputDebug % ">[" A_ThisFunc "(JSON=" JSON ", url=" url ")]" ; _DBG_
+		req_url  := this._api_url url
+		this.WebRequest.Open("POST", req_url)
+		Basic := this.__basic_auth_header() 
+		if (Basic)
+			this.WebRequest.SetRequestHeader("authorization", Basic)
+		this.WebRequest.Send(Contents)
+		data := this.WebRequest.ResponseText
+		If !RegExMatch(this.WebRequest.ResponseText, """html_url""\:""(.*?)""", Out)
+			throw this.WebRequest.ResponseText
+		if (this._debug) ; _DBG_
+			OutputDebug % "<[" A_ThisFunc "(JSON=" JSON ", url=" req_url ")] -> ret: " data ; _DBG_
+		return data
+	}
+	
+	
 	__debug(value="") { ; _DBG_
 		if % (value="") ; _DBG_
 			return this._debug ; _DBG_
@@ -236,26 +435,25 @@ Function: __New
     Constructor
 
 Parameters:
-    id - Gist-ID (*Obligatory* - https://gist.github.com/).
 	user - Username for https://gist.github.com/
 	password - Password for https://gist.github.com/
 	    
 Author(s):
     20120621 (Original) - hoppfrosch
+	20130102 Removed ID as parameter
 ===============================================================================
 */     
-	__New(id = 3742243, user = "AHKUser", password = "AHKUser2012", debug = 1) {
+	__New(user = "AHKUser", password = "AHKUser2012", debug = 1) {
 		this._debug := debug  ; _DBG_
 		
 		if (this._debug) ; _DBG_
 			OutputDebug % "<[" A_ThisFunc "(id=" id ", user= " user ", password=" password ")]" ; _DBG_
-		this.id := id
 		this.user := user
 		this.password := password
 		
 		this.WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 		if (this._debug) && (!this.WebRequest) ; _DBG_
-			OutputDebug % "<[" A_ThisFunc "(id=" req_url ", user=" user ", password=" password ")] -> ERROR: Creating WinHttp.WinHttpRequest COM objecz" ; _DBG_
+			OutputDebug % "<[" A_ThisFunc "(user=" user ", password=" password ")] -> ERROR: Creating WinHttp.WinHttpRequest COM object" ; _DBG_
 	}
 }
 ; end of class
