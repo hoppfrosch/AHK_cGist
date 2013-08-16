@@ -7,7 +7,7 @@ class Category_Gist {
         Test_version() {
             OutputDebug % "<<<<<<<<<<<<<<<<<<<[" A_ThisFunc "]>>>>>>>>>>>>>>>>>>>>>>>>>>" 
             l := new Gist()
-            Tests.TestEqual(l.version(),"0.1.0")
+            Tests.TestEqual(l.version(),"0.1.1")
             OutputDebug % ">>>>>>>>>>>>>>>>>>>[" A_ThisFunc "]<<<<<<<<<<<<<<<<<<<<<<<<<<"
         }    
         

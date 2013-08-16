@@ -10,16 +10,21 @@
 	Credits: 
 		- Perl Module WWW::GitHub::Gist(https://metacpan.org/module/WWW::GitHub::Gist)
 		- ComObject HTTPRequest(http://www.autohotkey.com/community/viewtopic.php?p=377651#p377651 & http://msdn.microsoft.com/en-us/library/aa384106.aspx)
+	    - Base64 Encoding by Laszlo (http://www.autohotkey.com/community/viewtopic.php?p=68613#p68613)
+		
+	Requires:
+		- lib_json by LordKrandel (http://www.autohotkey.com/community/viewtopic.php?f=13&t=66070)
 		
 	License: 
         WTFPL (http://sam.zoy.org/wtfpl/)
 		
 	Changelog:
+	    0.1.1 (20121015) - hoppfrosch ([+] Memberfunction getJSON())
 		0.1.0 (20121015) - hoppfrosch ([+] Initial)
 */
 class Gist {
 	static _api_url := "https://api.github.com"
-	static _version := "0.1.0"
+	static _version := "0.1.1"
 	_debug := 1  ; _DBG_
 	static user := ""
 	static password := ""
@@ -33,7 +38,7 @@ Function:   files
     Returns an array with filenames stored in gist
 
 Returns:
-    Array with filenames. The several files can be accessed via gist[files][%name%] ...
+    Array with filenames. The several files can be accessed via gist.files[fn] with fn as name of the file to access...
 	
 Author(s):
     20120928 (Original) - hoppfrosch
@@ -84,8 +89,32 @@ Author(s):
 			OutputDebug % "<[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
 		return retVal
 	}
+	
+/*
+===============================================================================
+Function:   getJSON
+    Returns the JSON string with current GIST
 
-	/*
+Returns:
+    String (JSON)
+	
+Author(s):
+    20121015 (Original) - hoppfrosch
+===============================================================================
+*/
+	getJSON() {
+		if (this._debug) ; _DBG_
+			OutputDebug % ">[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
+		
+		url := "/gists/" this.id
+		retVal := this.__get_json(url)
+		this.gist := retVal
+		if (this._debug) ; _DBG_
+			OutputDebug % "<[" A_ThisFunc "([id:" this.id "])]" ; _DBG_
+		return retVal
+	}
+
+/*
 ===============================================================================
 Function:   version
     Current version of the class (Versioning scheme according to http://semver.org)
