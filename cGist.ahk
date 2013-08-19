@@ -17,6 +17,7 @@
 	WTFPL (http://sam.zoy.org/wtfpl/)
 		
 	Changelog:
+		0.4.0 (20130819) - hoppfrosch (Prepared for Unittest with https://github.com/Uberi/Yunit.git) - #3
 	    0.3.0 (20130816) - hoppfrosch (Internal reorganization concerning documentation) - #1,#2
 		0.2.0 (20130102) - hoppfrosch (Create new gist & delete existing gist)
 		0.1.2 (20130102) - hoppfrosch (Functions AKK2StandardControlCharacter(), Standard2AHKControlCharacter())
@@ -26,7 +27,7 @@
 class Gist {
 	static _api_url := "https://api.github.com"
 	static _gist_url := "https://gist.github.com"
-	static _version := "0.2.0"
+	static _version := "0.4.0"
 	_debug := 1  ; _DBG_
 	static user := ""
 	static password := ""
@@ -445,7 +446,7 @@ Author(s):
 		this._debug := debug  ; _DBG_
 		
 		if (this._debug) ; _DBG_
-			OutputDebug % "<[" A_ThisFunc "(id=" id ", user= " user ", password=" password ")]" ; _DBG_
+			OutputDebug % "<[" A_ThisFunc "(user= " user ", password=" password ")]" ; _DBG_
 		this.user := user
 		this.password := password
 		

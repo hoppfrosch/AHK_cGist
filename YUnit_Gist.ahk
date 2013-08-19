@@ -4,13 +4,13 @@
 #Include %A_ScriptDir%\Yunit\Yunit.ahk
 #Include %A_ScriptDir%\Yunit\Window.ahk
 #Include %A_ScriptDir%\Yunit\StdOut.ahk
-#include cGist.ahk
+#include %A_ScriptDir%\cGist.ahk
 
 ; #Warn All
 ;#Warn LocalSameAsGlobal, Off
 #SingleInstance force
 
-ReferenceVersion := "0.2.0"
+ReferenceVersion := "0.4.0"
 debug := 1
 
 
