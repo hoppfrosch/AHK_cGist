@@ -1,5 +1,6 @@
 ;#NoEnv
-#Warn
+;#Warn
+#CommentFlag ;
 
 #Include %A_ScriptDir%\Yunit\Yunit.ahk
 #Include %A_ScriptDir%\Yunit\Window.ahk
@@ -37,6 +38,17 @@ class BasicTestSuite
 		Global ReferenceVersion
 		Yunit.assert(this.obj.version() == ReferenceVersion)
     }
+	
+	Get()
+	{
+		this.obj.get("6268535")
+		
+		MyFiles := this.obj.files()
+		fn := MyFiles[1]
+		MsgBox % "First FILENAME:" fn
+				
+		MsgBox % this.obj.getJSON()
+	}
 	
 	End()
     {
