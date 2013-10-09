@@ -133,6 +133,9 @@ Author(s):
 		return retVal
 	}
 	
+	data() {
+		return this.gist
+	}
 /*
 ===============================================================================
 Function:   getJSON
