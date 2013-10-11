@@ -1,4 +1,10 @@
-#CommentFlag ;
+ #CommentFlag ;
+ #Warn, All, OutputDebug
+
+gCurrentVersion := "0.5.0"
+gApiUrl := "https://api.github.com"
+gGistUrl := "https://gist.github.com"
+
 
 /*
 	Title: Gist-class
@@ -12,11 +18,13 @@
 		- ComObject HTTPRequest (http://www.autohotkey.com/board/topic/56987-com-object-reference-autohotkey-l/#entry358508 & http://msdn.microsoft.com/en-us/library/aa384106.aspx)
 		- Base64 Encoding by Laszlo (http://www.autohotkey.com/board/topic/5545-base64-coderdecoder/page-2#entry64250)
 		- Gist() by Geekdude (https://gist.github.com/4421950)
+		- "Create A Gist post" by Maestrith (http://www.autohotkey.com/board/topic/95515-ahk-11-create-a-gist-post/#entry601695)
 		
 	License: 
 	WTFPL (http://sam.zoy.org/wtfpl/)
 		
 	Changelog:
+		0.5.0 (20131009) - hoppfrosch (Added authentication with accesstoken) - #4
 		0.4.0 (20130819) - hoppfrosch (Prepared for Unittest with https://github.com/Uberi/Yunit.git) - #3
 	    0.3.0 (20130816) - hoppfrosch (Internal reorganization concerning documentation) - #1,#2
 		0.2.0 (20130102) - hoppfrosch (Create new gist & delete existing gist)
@@ -25,12 +33,7 @@
 		0.1.0 (20121015) - hoppfrosch (Initial)
 */
 class Gist {
-	static _api_url := "https://api.github.com"
-	static _gist_url := "https://gist.github.com"
-	static _version := "0.4.0"
-	_debug := 1  ; _DBG_
-	static user := ""
-	static password := ""
+	static _debug := 1  ; _DBG_
 	static id := 0
 	static WebRequest := ""
 	gist := ""
@@ -101,7 +104,7 @@ Author(s):
 			OutputDebug % "|[" A_ThisFunc "([id:" this.id "])] -> Gist contains " Cnt " files (" str ")" ; _DBG_
 		return Arr
 	}
-
+	
 /*
 ===============================================================================
 Function:   get
@@ -133,6 +136,9 @@ Author(s):
 		return retVal
 	}
 	
+	data() {
+		return this.gist
+	}
 /*
 ===============================================================================
 Function:   getJSON
@@ -215,34 +221,56 @@ Author(s):
 ===============================================================================
 */
 	url() {
-		return this._gist_url "/" this.id
+		return this.gist_url "/" this.id
 	}
 	
-/*
-===============================================================================
-Function:   version
-    Current version of the class (Versioning scheme according to http://semver.org)
-
-Returns:
-    current version number of the class
-
-Author(s):
-    20120621 (Original) - hoppfrosch
-===============================================================================
-*/
-	version() {
-		if (this._debug) ; _DBG_
-			OutputDebug % "|[" A_ThisFunc "() -> (" this._version ")]" ; _DBG_
-		return this._version
-	}
 
 ; ##############################################################################
 ; #################### INTERNAL FUNCTIONS ######################################
 ; ##############################################################################
 /*
 ===============================================================================
-Function: __basic_auth_header
+Function: __auth_header
     Creates authorization token for github (**INTERNAL**)
+    
+Returns:
+    authorization token (string)
+    
+Author(s):
+	20131009 (Original) - hoppfrosch
+===============================================================================
+*/  
+    __auth_header(method = "") {
+		if (method == "") {
+			if (this.authmethod != "") {
+				method := this.authmethod
+			} 
+			else {
+				method := "basic"
+			}
+		}
+    	if (this._debug) ; _DBG_
+			OutputDebug % ">[" A_ThisFunc "(method=" method ")]" ; _DBG_
+		ret := ""
+		this._authmethod := method
+
+		if (RegExMatch(this.authmethod, "i)^basic$")) {
+			ret := this.__basic_auth_header()
+		}
+		else if (RegExMatch(this.authmethod, "i)^bearer$")) {
+			ret := this.__bearer_auth_header()
+		}
+
+		if (this._debug) ; _DBG_
+			OutputDebug % "<[" A_ThisFunc "(method=" this.authmethod ") -> ret:<" ret ">]" ; _DBG_
+			
+		return ret
+	}
+	
+/*
+===============================================================================
+Function: __basic_auth_header
+    Creates authorization token (based on username and password) for github (**INTERNAL**)
     
 Returns:
     authorization token (string)
@@ -254,42 +282,63 @@ Author(s):
 */  
     __basic_auth_header() {
 		
-		if (!(this.user) && !(this.password)) {
+		if (!(this.username) && !(this.password)) {
 			token :=  ; Don't auth (anonymous)
+			if (this._debug) ; _DBG_
+				OutputDebug % ">[" A_ThisFunc "()] ANONYMOUS authentication" ; _DBG_
 			return token
 		}
-		
+		else {
+			str := this.username ":" this.password
+			token := "Basic " Base64Encode(str)
+		}
 		if (this._debug) ; _DBG_
-			OutputDebug % ">[" A_ThisFunc "(user=" this.user ", password=" this.password ")]" ; _DBG_
-		
-		str := this.user ":" this.password
-		token := "Basic " Base64Encode(str)
-		if (this._debug) ; _DBG_
-			OutputDebug % ">[" A_ThisFunc "(user=" this.user ", password=" this.password ")  -> ret:" token "]" ; _DBG_
+			OutputDebug % "|[" A_ThisFunc "(username=" this.username ", password=" this.password ")  -> ret:" token "]" ; _DBG_
 		return token
 	}
 
 
 /*
 ===============================================================================
-Function: __extractIDFromURL
-    Extracts ID from a given gist-url(**INTERNAL**)
+Function: __bearer_auth_header
+    Creates authorization token (based on access token) for github (**INTERNAL**)
     
-Parameters:
-    url - gist-URL (required)
-	
 Returns:
-    gist-ID
+    authorization token (string)
     
 Author(s):
-	20130102 (Original) - hoppfrosch
+	20120928 (Original) - hoppfrosch
+	20130102 Support anonymous authorization
 ===============================================================================
 */  
+    __bearer_auth_header() {
+		
+		if (!(this.accesstoken)) {
+			token :=  ; Don't auth (anonymous)
+		}
+		else {
+			token := "Bearer " this.accesstoken
+		}
+		if (this._debug) ; _DBG_
+			OutputDebug % "|["  A_ThisFunc "(accesstoken=" this.accesstoken ") -> ret:<" token ">]" ; _DBG_
+		return token
+	}
+	
 	__extractIDFromURL(url) {
+/* ===============================================================================
+Method: __extractIDFromURL
+    Extracts ID from a given gist-url(**INTERNAL**)
+Parameters:
+    url - gist-URL (required)
+Returns:
+    gist-ID
+Author(s):
+	20130102 (Original) - hoppfrosch
+*/  
 		if (this._debug) ; _DBG_
 			OutputDebug % ">[" A_ThisFunc "(url=" url ")]" ; _DBG_
 		
-		FoundPos := RegExMatch(url, this._gist_url "/(\d+)", match)
+		FoundPos := RegExMatch(url, this.gist_url "/(\d+)", match)
 		
 		if (FoundPos) {
 			if (this._debug) ; _DBG_
@@ -300,29 +349,66 @@ Author(s):
 		return
 	}
 
-/*
-===============================================================================
-Function: __HTTPdelete
-    HTTPdelete on Github-URL (**INTERNAL**)
+	__Get(aName) {
+/* ===============================================================================
+	Method: __Get(aName)
+		Custom Getter (*INTERNAL*)
+*/   
+		ret := 
+		written := 0 ; _DBG_
 
+;    if (aName = "accesstoken") {
+;		ret := this._accesstoken
+;	}
+;	else if (aName = "username") {
+/*! ---------------------------------------------------------------------------------------
+	Property: username [get/set]
+		Get or Set the *username*-Property.  This property is used for basic authentication
+	Value:
+		username - name of the user on github
+*/
+;		ret := this._username
+;	}
+;
+		return ret
+	}
+
+	_Set(aName, aValue) {
+/* ===============================================================================
+	Method: __Set(aName, aValue)
+		Custom Setter (*INTERNAL*)
+*/   
+		ret :=
+
+;	if (aName == "accesstoken") {
+;		this._accesstoken := aValue
+;		ret := this._accesstoken
+;	}
+;	else if (aName == "username") {
+;		this.username := aValue
+;		ret := this._username
+;	}
+		return ret
+	}
+
+	__HTTPdelete(url) {
+/* ===============================================================================
+Method: __HTTPdelete
+    HTTPdelete on Github-URL (**INTERNAL**)
 Parameters:
     url - URL to delete - it's a relative URL to "https://api.github.com" (required)
-    
 Returns:
     String ("{"message":"Not Found"}" in case of Error)
-    
 Author(s):
     20130102 (Original) - hoppfrosch
-===============================================================================
 */ 
-	__HTTPdelete(url) {
 		if (this._debug) ; _DBG_
 			OutputDebug % ">[" A_ThisFunc "(url=" url ")]" ; _DBG_
-		req_url  := this._api_url url
-		Basic := this.__basic_auth_header() 
+		req_url  := this.api_url url
+		Auth := this.__auth_header() 
 		this.WebRequest.Open("DELETE", req_url)
-		if (Basic)
-			this.WebRequest.SetRequestHeader("authorization", Basic)
+		if (Auth)
+			this.WebRequest.SetRequestHeader("authorization", Auth)
 		this.WebRequest.Send()
 		data := this.WebRequest.ResponseText
 		if (this._debug) ; _DBG_
@@ -330,22 +416,17 @@ Author(s):
 		return data
 	}
 
-/*
-===============================================================================
+	__HTTPget_obj(url) {
+/* ===============================================================================
 Function: __HTTPget_obj
     HTTPget on Github-URL, returning result as Object (**INTERNAL**)
-
 Parameters:
     url - URL to get - it's a relative URL to "https://api.github.com" (required)
-    
 Returns:
     json object, (empty object in case of error)
-    
 Author(s):
     20120928 (Original) - hoppfrosch
-===============================================================================
 */ 
-	__HTTPget_obj(url) {
 		if (this._debug) ; _DBG_
 			OutputDebug % ">[" A_ThisFunc "(url=" url ")]" ; _DBG_
 		data := this.__HTTPget(url)
@@ -374,11 +455,12 @@ Author(s):
 	__HTTPget(url) {
 		if (this._debug) ; _DBG_
 			OutputDebug % ">[" A_ThisFunc "(url=" url ")]" ; _DBG_
-		req_url  := this._api_url url
-		Basic := this.__basic_auth_header() 
+		req_url  := this.api_url url
+		
+		Auth := this.__auth_header()
 		this.WebRequest.Open("GET", req_url)
-		if (Basic)
-			this.WebRequest.SetRequestHeader("authorization", Basic)
+		if (Auth)
+			this.WebRequest.SetRequestHeader("authorization", Auth)
 		this.WebRequest.Send()
 		data := this.WebRequest.ResponseText
 		if (this._debug) ; _DBG_
@@ -405,11 +487,11 @@ Author(s):
 	__HTTPpost(Contents, url = "/gists") {
 		if (this._debug) ; _DBG_
 			OutputDebug % ">[" A_ThisFunc "(JSON=" JSON ", url=" url ")]" ; _DBG_
-		req_url  := this._api_url url
+		req_url  := this.api_url url
 		this.WebRequest.Open("POST", req_url)
-		Basic := this.__basic_auth_header() 
-		if (Basic)
-			this.WebRequest.SetRequestHeader("authorization", Basic)
+		Auth := this.__auth_header() 
+		if (Auth)
+			this.WebRequest.SetRequestHeader("authorization", Auth)
 		this.WebRequest.Send(Contents)
 		data := this.WebRequest.ResponseText
 		If !RegExMatch(this.WebRequest.ResponseText, """html_url""\:""(.*?)""", Out)
@@ -428,31 +510,32 @@ Author(s):
 		return this.debug ; _DBG_
 	} ; _DBG_
 
-/*
-===============================================================================
-Function: __New
+/* ===============================================================================
+Methid: __New
     Constructor
-
-Parameters:
-	user - Username for https://gist.github.com/
-	password - Password for https://gist.github.com/
-	    
 Author(s):
     20120621 (Original) - hoppfrosch
 	20130102 Removed ID as parameter
+	20131010 Removed Username and Password as parameter
 ===============================================================================
 */     
-	__New(user = "AHKUser", password = "AHKUser2012", debug = 1) {
+	__New(debug = 1) {
 		this._debug := debug  ; _DBG_
 		
 		if (this._debug) ; _DBG_
-			OutputDebug % "<[" A_ThisFunc "(user= " user ", password=" password ")]" ; _DBG_
-		this.user := user
-		this.password := password
+			OutputDebug % "<[" A_ThisFunc "(debug= " debug ")]" ; _DBG_
+
+        ; Set default values
+		Global gCurrentVersion
+		this.version := gCurrentVersion
+		Global gApiUrl
+		this.api_url := gApiUrl
+		Global gGistUrl
+		this.gist_url := gGistUrl
 		
 		this.WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 		if (this._debug) && (!this.WebRequest) ; _DBG_
-			OutputDebug % "<[" A_ThisFunc "(user=" user ", password=" password ")] -> ERROR: Creating WinHttp.WinHttpRequest COM object" ; _DBG_
+			OutputDebug % "<[" A_ThisFunc "(debug= " debug ")] -> ERROR: Creating WinHttp.WinHttpRequest COM object" ; _DBG_
 	}
 }
 ; end of class
