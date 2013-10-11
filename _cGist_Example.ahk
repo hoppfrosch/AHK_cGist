@@ -4,8 +4,11 @@
 user := "AHKUser"
 pw := "AHKUser2012"
 
-; Create a new GIST-object by given ID
-gistObj := new Gist(user, pw)
+; Create a new GIST
+gistObj := new Gist()
+
+this.authmethod := "bearer"
+this.accesstoken := "0bb269e042baa2c203944f2c8255017d809bc134"
 
 
 ; ########## Creating a new GIST ###########################################################
