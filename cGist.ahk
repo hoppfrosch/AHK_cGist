@@ -1,7 +1,6 @@
  #CommentFlag ;
  #Warn, All, OutputDebug
 
-gCurrentVersion := "0.5.0"
 gApiUrl := "https://api.github.com"
 gGistUrl := "https://gist.github.com"
 
@@ -24,6 +23,7 @@ gGistUrl := "https://gist.github.com"
 	WTFPL (http://sam.zoy.org/wtfpl/)
 		
 	Changelog:
+		0.6.0 (20131127) - hoppfrosch (moved global vars into membervars)
 		0.5.0 (20131009) - hoppfrosch (Added authentication with accesstoken) - #4
 		0.4.0 (20130819) - hoppfrosch (Prepared for Unittest with https://github.com/Uberi/Yunit.git) - #3
 	    0.3.0 (20130816) - hoppfrosch (Internal reorganization concerning documentation) - #1,#2
@@ -36,6 +36,10 @@ class Gist {
 	static _debug := 1  ; _DBG_
 	static id := 0
 	static WebRequest := ""
+	version := "0.6.0"
+	api_url := "https://api.github.com"
+    gist_url := "https://gist.github.com"
+
 	gist := ""
 
 /*
@@ -523,15 +527,7 @@ Author(s):
 		this._debug := debug  ; _DBG_
 		
 		if (this._debug) ; _DBG_
-			OutputDebug % "<[" A_ThisFunc "(debug= " debug ")]" ; _DBG_
-
-        ; Set default values
-		Global gCurrentVersion
-		this.version := gCurrentVersion
-		Global gApiUrl
-		this.api_url := gApiUrl
-		Global gGistUrl
-		this.gist_url := gGistUrl
+			OutputDebug % "<[" A_ThisFunc "(debug= " debug ") - version: " this.version ")]" ; _DBG_
 		
 		this.WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 		if (this._debug) && (!this.WebRequest) ; _DBG_
