@@ -11,11 +11,12 @@
 ;#Warn LocalSameAsGlobal, Off
 #SingleInstance force
 
-ReferenceVersion := "0.5.0"
+ReferenceVersion := "0.6.0"
 debug := 1
 
 
 Yunit.Use(YunitStdOut, YunitWindow).Test(MiscTestSuite,BasicTestSuite,BearerTestSuite)
+;Yunit.Use(YunitStdOut, YunitWindow).Test(BearerTestSuite)
 ;Yunit.Use(YunitStdOut, YunitWindow).Test(MiscTestSuite, NotRealWindowTestSuite, HideShowTestSuite, ExistTestSuite, RollupTestSuite, MoveResizeTestSuite, TileTestSuite)
 Return
 
@@ -77,6 +78,7 @@ class BearerTestSuite
 		
 		MyFiles := this.obj.files()
 		fn := MyFiles[1]
+		MsgBox % "First FILENAME:" fn
 		Yunit.assert(fn == "Apple")
 				
 		;MsgBox % this.obj.getJSON()
